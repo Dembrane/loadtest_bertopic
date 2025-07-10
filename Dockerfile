@@ -40,4 +40,5 @@ COPY handler.py .
 
 STOPSIGNAL SIGINT
 
+
 CMD ["python", "-u", "handler.py"] 

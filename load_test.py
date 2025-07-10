@@ -203,7 +203,7 @@ def run_load_test(url: str, data: Dict[str, Any], api_key: Optional[str] = None,
     
     results = []
     
-    if concurrent == 1:
+    if concurrent != 1:
         # Sequential requests
         for i in range(num_requests):
             print(f"Request {i+1}/{num_requests}")
