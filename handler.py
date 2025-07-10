@@ -50,10 +50,6 @@ def handler(event):
     topics, probs, hierarchical_topics = run_topic_model_hierarchical(
         topic_model, sentences)
     print(topics)
-    return {
-        "topics": topics,
-        "probs": probs,
-        "hierarchical_topics": hierarchical_topics
-    }
+    return {"completed": True}
 
 runpod.serverless.start({"handler": handler})

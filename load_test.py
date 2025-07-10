@@ -261,7 +261,7 @@ def main():
     parser.add_argument('--sizes', nargs='+', type=int, default=[100, 1000, 10000], 
                        help='Document sizes to test')
     parser.add_argument('--requests', type=int, default=3, help='Number of requests per size')
-    parser.add_argument('--concurrent', type=int, default=1, help='Number of concurrent requests')
+    parser.add_argument('--concurrent', type=int, default=0, help='Number of concurrent requests')
     parser.add_argument('--output', default='load_test_results.json', help='Output file for results')
     
     args = parser.parse_args()
