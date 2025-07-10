@@ -25,7 +25,8 @@ def generate_test_data(sizes: List[int]) -> Dict[int, Dict[str, Any]]:
     
     for size in sizes:
         # Take the first 'size' documents, or all if size is larger than available
-        sample_docs = docs[:min(size, len(docs))]
+        import random
+        sample_docs = random.choices(docs, k=size)
         test_data[size] = {
             "input": {
                 "sentences": sample_docs

@@ -38,7 +38,6 @@ def run_topic_model_hierarchical(
     return topics, probs, hierarchical_topics
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-device = "cpu"
 topic_model = BERTopic(embedding_model=SentenceTransformer("all-MiniLM-L6-v2",      
 device=device))
 
