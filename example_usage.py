@@ -54,9 +54,16 @@ def run_example():
     print("- 100,000 documents: ~15-60 minutes (including polling)")
     print()
     
+    print("Input Format:")
+    print("- num_docs: Number of documents to process")
+    print("- num_topics: Number of topics to reduce to (default: 10)")
+    print("- random_seed: Random seed for reproducibility (default: 42)")
+    print()
+    
     print("Async API Notes:")
     print("- Jobs are submitted immediately and return a job ID")
     print("- Status is polled every 30 seconds until completion")
+    print("- Dataset is downloaded within the handler to avoid payload limits")
     print("- Larger datasets may take longer due to processing time")
     print()
     

@@ -3,6 +3,8 @@ from bertopic import BERTopic
 from sentence_transformers import SentenceTransformer
 import torch
 import runpod
+from sklearn.datasets import fetch_20newsgroups
+import random
 
 def run_topic_model_hierarchical(
     topic_model, 
@@ -43,13 +45,43 @@ device=device))
 
 
 def handler(event):
-    input = event["input"]
-    print(input)
-    sentences = input["sentences"]
-    print(sentences)
-    topics, probs, hierarchical_topics = run_topic_model_hierarchical(
-        topic_model, sentences)
-    print(topics)
-    return {"completed": True}
+    try: 
+        input = event["input"]
+        print("Received input:", input)
+        
+        # Extract parameters
+        num_docs = input.get("num_docs", 100)  # Number of documents to process
+        num_topics = input.get("num_topics", 10)  # Number of topics to reduce to
+        random_seed = input.get("random_seed", 42)  # Random seed for reproducibility
+        
+        print(f"Processing {num_docs} documents with {num_topics} topics")
+        
+        # Download and prepare the dataset
+        print("Loading 20 newsgroups dataset...")
+        newsgroups = fetch_20newsgroups(subset='all', remove=('headers', 'footers', 'quotes'))
+        docs = newsgroups.data
+        
+        # Set random seed for reproducibility
+        random.seed(random_seed)
+        
+        # Sample the requested number of documents
+        if num_docs <= len(docs):
+            sample_docs = random.sample(docs, num_docs)
+        else:
+            # If requested more than available, use all and repeat
+            sample_docs = random.choices(docs, k=num_docs)
+        
+        print(f"Selected {len(sample_docs)} documents for processing")
+        
+        # Run topic modeling
+        topics, probs, hierarchical_topics = run_topic_model_hierarchical(
+            topic_model, sample_docs, nr_topics=num_topics)
+        
+        print(f"Completed topic modeling. Found {len(set(topics))} unique topics")
+  
+        return {"completed": True}
+    except Exception as e:
+        print(f"Error: {e}")
+        raise e
 
 runpod.serverless.start({"handler": handler})

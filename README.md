@@ -122,6 +122,13 @@ Based on typical BERTopic performance:
 2. Poll the status endpoint every 30 seconds
 3. Report completion when the job finishes
 
+**Input Format**: The handler now accepts:
+- `num_docs`: Number of documents to process
+- `num_topics`: Number of topics to reduce to (default: 10)
+- `random_seed`: Random seed for reproducibility (default: 42)
+
+The dataset is downloaded and processed within the handler to avoid payload size limits.
+
 Performance depends on:
 - GPU availability and type
 - Model complexity

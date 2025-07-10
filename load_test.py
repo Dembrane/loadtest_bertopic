@@ -17,22 +17,18 @@ def generate_test_data(sizes: List[int]) -> Dict[int, Dict[str, Any]]:
     Returns:
         Dictionary mapping size to test data
     """
-    print("Loading 20 newsgroups dataset...")
-    newsgroups = fetch_20newsgroups(subset='all', remove=('headers', 'footers', 'quotes'))
-    docs = newsgroups.data
-    
     test_data = {}
     
     for size in sizes:
-        # Take the first 'size' documents, or all if size is larger than available
-        import random
-        sample_docs = random.choices(docs, k=size)
+        # Create test data with the new format
         test_data[size] = {
             "input": {
-                "sentences": sample_docs
+                "num_docs": size,
+                "num_topics": 10,  # Default number of topics
+                "random_seed": 42   # For reproducibility
             }
         }
-        print(f"Generated test data with {len(sample_docs)} documents")
+        print(f"Generated test data for {size} documents")
     
     return test_data
 
@@ -95,7 +91,7 @@ def send_request(url: str, data: Dict[str, Any], api_key: Optional[str] = None, 
         
         status_url = f"{base_url}/status/{job_id}"
         print(f"    Status URL: {status_url}")
-        poll_interval = 30  # Poll every 30 seconds
+        poll_interval = 5  # Poll every 30 seconds
         max_polls = timeout // poll_interval
         
         for poll_count in range(max_polls):
