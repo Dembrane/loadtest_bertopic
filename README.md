@@ -34,13 +34,13 @@ This will create:
 The most comprehensive option with detailed statistics:
 
 ```bash
-python load_test.py --url "https://your-runpod-endpoint.runpod.net" --sizes 100 1000 10000 --requests 5 --concurrent 2
+python load_test.py --url "https://api.runpod.ai/v2/your-endpoint-id/run" --sizes 100 1000 10000 --requests 5 --concurrent 2
 ```
 
 With API key authentication:
 
 ```bash
-python load_test.py --url "https://your-runpod-endpoint.runpod.net" --api-key "your-api-key-here" --sizes 100 1000 10000 --requests 5 --concurrent 2
+python load_test.py --url "https://api.runpod.ai/v2/your-endpoint-id/run" --api-key "your-api-key-here" --sizes 100 1000 10000 --requests 5 --concurrent 2
 ```
 
 Options:
@@ -76,13 +76,13 @@ Results for 100 documents:
 Simple testing with curl:
 
 ```bash
-./test_with_curl.sh "https://your-runpod-endpoint.runpod.net"
+./test_with_curl.sh "https://api.runpod.ai/v2/your-endpoint-id/run"
 ```
 
 With API key authentication:
 
 ```bash
-./test_with_curl.sh "https://your-runpod-endpoint.runpod.net" "your-api-key-here"
+./test_with_curl.sh "https://api.runpod.ai/v2/your-endpoint-id/run" "your-api-key-here"
 ```
 
 This will test with 100, 1000, and 10000 documents sequentially.
@@ -95,7 +95,7 @@ You can also test manually using the generated JSON files:
 curl -X POST \
   -H "Content-Type: application/json" \
   -d @test_input_1000.json \
-  "https://your-runpod-endpoint.runpod.net"
+  "https://api.runpod.ai/v2/your-endpoint-id/run"
 ```
 
 With API key authentication:
@@ -105,23 +105,29 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-api-key-here" \
   -d @test_input_1000.json \
-  "https://your-runpod-endpoint.runpod.net"
+  "https://api.runpod.ai/v2/your-endpoint-id/run"
 ```
 
 ## Expected Performance
 
 Based on typical BERTopic performance:
 
-- **100 documents**: ~5-15 seconds
-- **1,000 documents**: ~30-90 seconds  
-- **10,000 documents**: ~3-10 minutes
-- **100,000 documents**: ~15-60 minutes
+- **100 documents**: ~30-90 seconds (including polling)
+- **1,000 documents**: ~2-5 minutes (including polling)
+- **10,000 documents**: ~5-15 minutes (including polling)
+- **100,000 documents**: ~15-60 minutes (including polling)
+
+**Note**: RunPod uses an asynchronous API. The load testing tools:
+1. Submit the job and receive a job ID immediately
+2. Poll the status endpoint every 30 seconds
+3. Report completion when the job finishes
 
 Performance depends on:
 - GPU availability and type
 - Model complexity
 - Network latency
 - RunPod instance specifications
+- Queue position (if other jobs are running)
 
 ## Troubleshooting
 

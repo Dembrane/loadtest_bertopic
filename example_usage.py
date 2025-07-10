@@ -48,10 +48,16 @@ def run_example():
     print()
     
     print("Expected Performance:")
-    print("- 100 documents: ~5-15 seconds")
-    print("- 1,000 documents: ~30-90 seconds")
-    print("- 10,000 documents: ~3-10 minutes")
-    print("- 100,000 documents: ~15-60 minutes")
+    print("- 100 documents: ~30-90 seconds (including polling)")
+    print("- 1,000 documents: ~2-5 minutes (including polling)")
+    print("- 10,000 documents: ~5-15 minutes (including polling)")
+    print("- 100,000 documents: ~15-60 minutes (including polling)")
+    print()
+    
+    print("Async API Notes:")
+    print("- Jobs are submitted immediately and return a job ID")
+    print("- Status is polled every 30 seconds until completion")
+    print("- Larger datasets may take longer due to processing time")
     print()
     
     print("Tips:")
@@ -60,6 +66,7 @@ def run_example():
     print("- Check the generated JSON files before sending large requests")
     print("- Use the --output flag to save results for analysis")
     print("- Increase timeout for larger datasets")
+    print("- Jobs may queue if multiple requests are sent simultaneously")
 
 if __name__ == "__main__":
     run_example() 

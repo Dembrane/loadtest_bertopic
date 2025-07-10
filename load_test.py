@@ -38,7 +38,7 @@ def generate_test_data(sizes: List[int]) -> Dict[int, Dict[str, Any]]:
 
 def send_request(url: str, data: Dict[str, Any], api_key: Optional[str] = None, timeout: int = 300) -> Dict[str, Any]:
     """
-    Send a single request to the RunPod handler.
+    Send a request to the RunPod handler and poll for completion.
     
     Args:
         url: RunPod endpoint URL
@@ -56,23 +56,125 @@ def send_request(url: str, data: Dict[str, Any], api_key: Optional[str] = None, 
         headers["Authorization"] = f"Bearer {api_key}"
     
     try:
+        # Submit the job
         response = requests.post(url, json=data, headers=headers, timeout=timeout)
-        end_time = time.time()
         
+        if response.status_code != 200:
+            return {
+                "status_code": response.status_code,
+                "response_time": time.time() - start_time,
+                "success": False,
+                "response_size": 0,
+                "error": f"Job submission failed: {response.status_code}"
+            }
+        
+        # Parse the job ID from the response
+        job_response = response.json()
+        job_id = job_response.get('id')
+        
+        if not job_id:
+            return {
+                "status_code": response.status_code,
+                "response_time": time.time() - start_time,
+                "success": False,
+                "response_size": 0,
+                "error": "No job ID received"
+            }
+        
+        print(f"    Job submitted with ID: {job_id}")
+        
+        # Poll for job completion
+        # Extract the endpoint ID from the URL
+        # URL format: https://api.runpod.ai/v2/{endpoint_id}/run
+        if "/run" in url:
+            # Remove /run from the end to get the base URL
+            base_url = url.replace("/run", "")
+        else:
+            # Fallback: assume it's already the base URL
+            base_url = url.rstrip("/")
+        
+        status_url = f"{base_url}/status/{job_id}"
+        print(f"    Status URL: {status_url}")
+        poll_interval = 30  # Poll every 30 seconds
+        max_polls = timeout // poll_interval
+        
+        for poll_count in range(max_polls):
+            time.sleep(poll_interval)
+            
+            try:
+                status_response = requests.get(status_url, headers=headers, timeout=10)
+                
+                if status_response.status_code == 200:
+                    status_data = status_response.json()
+                    status = status_data.get('status')
+                    
+                    print(f"    Poll {poll_count + 1}: Status = {status}")
+                    
+                    if status == 'COMPLETED':
+                        # Job completed successfully
+                        end_time = time.time()
+                        result = status_data.get('output', {})
+                        
+                        return {
+                            "status_code": 200,
+                            "response_time": end_time - start_time,
+                            "success": True,
+                            "response_size": len(str(result)),
+                            "error": None,
+                            "job_id": job_id,
+                            "result": result
+                        }
+                    
+                    elif status == 'FAILED':
+                        # Job failed
+                        error_msg = status_data.get('error', 'Unknown error')
+                        return {
+                            "status_code": 500,
+                            "response_time": time.time() - start_time,
+                            "success": False,
+                            "response_size": 0,
+                            "error": f"Job failed: {error_msg}",
+                            "job_id": job_id
+                        }
+                    
+                    elif status in ['IN_QUEUE', 'IN_PROGRESS']:
+                        # Job still running, continue polling
+                        continue
+                    
+                    else:
+                        # Unknown status
+                        return {
+                            "status_code": status_response.status_code,
+                            "response_time": time.time() - start_time,
+                            "success": False,
+                            "response_size": 0,
+                            "error": f"Unknown status: {status}",
+                            "job_id": job_id
+                        }
+                
+                else:
+                    print(f"    Poll {poll_count + 1}: Status check failed - {status_response.status_code}")
+                    
+            except requests.exceptions.RequestException as e:
+                print(f"    Poll {poll_count + 1}: Request error - {str(e)}")
+        
+        # Timeout reached
         return {
-            "status_code": response.status_code,
-            "response_time": end_time - start_time,
-            "success": response.status_code == 200,
-            "response_size": len(response.content) if response.content else 0,
-            "error": None
+            "status_code": None,
+            "response_time": timeout,
+            "success": False,
+            "response_size": 0,
+            "error": f"Job timeout after {timeout} seconds",
+            "job_id": job_id
         }
+        
     except requests.exceptions.Timeout:
         return {
             "status_code": None,
             "response_time": timeout,
             "success": False,
             "response_size": 0,
-            "error": "Timeout"
+            "error": "Initial request timeout"
         }
     except Exception as e:
         return {
